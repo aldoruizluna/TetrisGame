@@ -28,68 +28,43 @@ class MockSettings:
 class BaseGame:
     """Base class for all game modes."""
     
+    # Cache fall speeds for different difficulty levels
+    FALL_SPEEDS = {
+        "Easy": SCREEN_DIMENSIONS['BLOCK_SIZE'] * 6,
+        "Normal": SCREEN_DIMENSIONS['BLOCK_SIZE'] * 5,
+        "Hard": SCREEN_DIMENSIONS['BLOCK_SIZE'] * 4
+    }
+    
     def __init__(self, screen, settings, high_scores):
         """Initialize the game."""
-        print("\nInitializing BaseGame...")
-        # Set the screen for rendering
-        self.screen = screen  
-        # Store game settings
-        self.settings = settings  
-        # Store high scores
-        self.high_scores = high_scores  
-        # Set the window title
-        pygame.display.set_caption("Tetris")  
-        # Create a clock to manage frame rate
-        self.clock = pygame.time.Clock()  
-        # Initialize game state to PLAYING since we're starting a new game
+        self.screen = screen
+        self.settings = settings
+        self.high_scores = high_scores
+        pygame.display.set_caption("Tetris")
+        self.clock = pygame.time.Clock()
         self.current_state = GameState.PLAYING
-        print("Initial game state set to:", self.current_state)
-        # Flag to keep the game running
-        self.running = True  
-        # Call method to reset the game state
+        self.running = True
         self.reset_game()
-        print("Game reset completed")
-        # Ensure window is focused and visible
-        pygame.event.set_grab(True)  # Capture input focus
-        print("Input focus captured")
-        # Force a display update
-        pygame.display.flip()
-        print("Display updated")
-        print("BaseGame initialization complete\n")
+        pygame.event.set_grab(True)
 
     def reset_game(self):
         """Reset the game state."""
-        # Create a grid for the game based on GRID_WIDTH and GRID_HEIGHT
-        self.grid = [[None for _ in range(SCREEN_DIMENSIONS['GRID_WIDTH'])] for _ in range(SCREEN_DIMENSIONS['GRID_HEIGHT'])]
-        # No current piece at the start
-        self.current_piece = None  
-        # Timer for piece falling
-        self.fall_time = 0  
-        # Default fall speed in milliseconds
-        self.fall_speed = SCREEN_DIMENSIONS['BLOCK_SIZE']  
-        # Adjust fall speed based on difficulty settings
-        if self.settings.difficulty == "Easy":
-            self.fall_speed = SCREEN_DIMENSIONS['BLOCK_SIZE'] * 6
-        elif self.settings.difficulty == "Hard":
-            self.fall_speed = SCREEN_DIMENSIONS['BLOCK_SIZE'] * 4
-        # Game is not over initially
-        self.game_over = False  
-        # Initialize score to zero
-        self.score = 0  
-        # Spawn the first piece
-        self.spawn_new_piece()  
-        print("Game reset: current_piece initialized.")
+        grid_width = SCREEN_DIMENSIONS['GRID_WIDTH']
+        grid_height = SCREEN_DIMENSIONS['GRID_HEIGHT']
+        self.grid = [[None for _ in range(grid_width)] for _ in range(grid_height)]
+        self.current_piece = None
+        self.fall_time = 0
+        self.fall_speed = self.FALL_SPEEDS.get(self.settings.difficulty, self.FALL_SPEEDS["Normal"])
+        self.game_over = False
+        self.score = 0
+        self.spawn_new_piece()
 
     def spawn_new_piece(self):
         """Create and spawn a new tetrimino."""
-        # Calculate starting position for the new piece
-        start_x = SCREEN_DIMENSIONS['GRID_WIDTH'] // 2 - 1  # Center horizontally
-        start_y = 0  # Start at the top of the grid
-        # Create a new Tetrimino with a random shape
+        start_x = SCREEN_DIMENSIONS['GRID_WIDTH'] // 2 - 1
+        start_y = 0
         shape_info = random.choice(SHAPES)
-        shape = shape_info['shape']
-        color = shape_info['color']
-        self.current_piece = Tetrimino(start_x, start_y, {'shape': shape, 'color': color})
+        self.current_piece = Tetrimino(start_x, start_y, shape_info)
 
     def check_collision(self, x_offset=0, y_offset=0, shape=None):
         """Check if the current piece collides with anything."""
@@ -110,7 +85,6 @@ class BaseGame:
                     if (abs_x < 0 or abs_x >= SCREEN_DIMENSIONS['GRID_WIDTH'] or 
                         abs_y >= SCREEN_DIMENSIONS['GRID_HEIGHT'] or 
                         (abs_y >= 0 and self.grid[abs_y][abs_x] is not None)):
-                        print(f"Collision detected at ({abs_x}, {abs_y})")
                         return True  # Collision detected
         return False  # No collision detected
 
@@ -119,7 +93,6 @@ class BaseGame:
         if not self.current_piece:
             return
             
-        print("Piece cannot move down, locking in place")
         for y, row in enumerate(self.current_piece.shape):
             for x, cell in enumerate(row):
                 if cell:
@@ -130,26 +103,23 @@ class BaseGame:
                     if 0 <= abs_y < SCREEN_DIMENSIONS['GRID_HEIGHT'] and 0 <= abs_x < SCREEN_DIMENSIONS['GRID_WIDTH']:
                         self.grid[abs_y][abs_x] = self.current_piece.color
                     else:
-                        print(f"Game over: piece locked outside grid at ({abs_x}, {abs_y})")
                         self.game_over = True
                         return
 
-        # Clear any completed lines
+        # Clear any completed lines and update score
         lines_cleared = self.clear_lines()
         if lines_cleared > 0:
-            print(f"Cleared {lines_cleared} lines")
-            self.score += lines_cleared * 100 * lines_cleared
+            self.score += lines_cleared * 100
 
         # Spawn a new piece
         self.spawn_new_piece()
         
         # Check if the new piece can be placed
         if self.check_collision():
-            print("Game over: new piece cannot be placed")
             self.game_over = True
 
     def clear_lines(self):
-        """Clear completed lines and update score."""
+        """Clear completed lines."""
         lines_cleared = 0
         y = SCREEN_DIMENSIONS['GRID_HEIGHT'] - 1
         
@@ -164,15 +134,11 @@ class BaseGame:
             else:
                 y -= 1
 
-        if lines_cleared > 0:
-            print(f"Cleared {lines_cleared} lines")
-            self.score += lines_cleared * 100 * lines_cleared
         return lines_cleared
 
     def update(self):
         """Update game state."""
         if not self.current_piece:
-            print("No current piece, spawning new one")
             self.spawn_new_piece()
             return
 
@@ -184,18 +150,14 @@ class BaseGame:
             # Move piece down if enough time has passed
             if self.fall_time >= self.fall_speed:
                 self.fall_time = 0
-                print(f"Moving piece down from y={self.current_piece.y}")
                 
                 # Check if piece can move down
                 if not self.check_collision(y_offset=1):
                     self.current_piece.move(0, 1)
-                    print(f"Piece moved down to y={self.current_piece.y}")
                 else:
                     # Lock the piece and spawn a new one
-                    print("Piece cannot move down, locking in place")
                     self.lock_piece()
                     if self.game_over:
-                        print("Game over detected")
                         self.current_state = GameState.GAME_OVER
 
     def handle_input(self, events):
@@ -233,12 +195,9 @@ class BaseGame:
 
     def draw(self):
         """Draw the game state."""
-        print("Drawing game state:", self.current_state)
         self.screen.fill(COLORS["BLACK"])  # Clear screen with black background
         
         if self.current_state == GameState.PLAYING:
-            print("Drawing game elements...")
-            
             # Draw the grid border
             border_rect = pygame.Rect(
                 SCREEN_DIMENSIONS['GRID_OFFSET_X'] - 2,
@@ -263,7 +222,6 @@ class BaseGame:
             
             # Draw the current piece
             if self.current_piece:
-                print("Drawing current piece at position:", self.current_piece.x, self.current_piece.y)
                 for y, row in enumerate(self.current_piece.shape):
                     for x, cell in enumerate(row):
                         if cell:
@@ -298,7 +256,6 @@ class BaseGame:
         
         # Force the display to update
         pygame.display.flip()
-        print("Display updated")
 
     def render_main_menu(self):
         """Render the main menu screen."""
@@ -314,33 +271,61 @@ class SpeedGame(BaseGame):
     """Class for the Speed Game mode."""
     def __init__(self, screen, settings, high_scores):
         super().__init__(screen, settings, high_scores)
-        self.speed_factor = 1.0  # Example speed factor to control game speed
+        self.speed_factor = 1.0
+        self.lines_cleared = 0
+        self.min_fall_speed = 50  # Minimum fall speed (fastest)
+
+    def clear_lines(self):
+        """Clear completed lines and update speed."""
+        lines_cleared = super().clear_lines()
+        if lines_cleared > 0:
+            self.lines_cleared += lines_cleared
+            # Increase speed by 10% for each line cleared
+            self.speed_factor *= (0.9 ** lines_cleared)
+            # Calculate new fall speed
+            new_fall_speed = int(self.FALL_SPEEDS[self.settings.difficulty] * self.speed_factor)
+            # Ensure fall speed doesn't go below minimum
+            self.fall_speed = max(self.min_fall_speed, new_fall_speed)
+        return lines_cleared
 
     def update(self):
         """Update the game state for the Speed Game mode."""
-        # Implement speed-specific logic here
-        pass
+        super().update()
 
     def draw(self):
         """Draw the game elements on the screen for the Speed Game mode."""
-        # Implement drawing logic here
-        pass
+        super().draw()
 
 class BattleGame(BaseGame):
     """Class for the Battle Game mode."""
     def __init__(self, screen, settings, high_scores):
         super().__init__(screen, settings, high_scores)
-        self.opponent_score = 0  # Example opponent score
+        self.opponent_score = 0
+        self.opponent_lines_cleared = 0
+        self.opponent_level = 1
+
+    def clear_lines(self):
+        """Clear completed lines and update opponent score."""
+        lines_cleared = super().clear_lines()
+        if lines_cleared > 0:
+            # Update opponent score based on lines cleared
+            self.opponent_lines_cleared += lines_cleared
+            self.opponent_score += lines_cleared * 100 * self.opponent_level
+            # Level up opponent every 10 lines
+            self.opponent_level = (self.opponent_lines_cleared // 10) + 1
+        return lines_cleared
 
     def update(self):
         """Update the game state for the Battle Game mode."""
-        # Implement battle-specific logic here
-        pass
+        super().update()
 
     def draw(self):
         """Draw the game elements on the screen for the Battle Game mode."""
-        # Implement drawing logic here
-        pass
+        super().draw()
+        # Draw opponent score
+        font = pygame.font.Font(None, 36)
+        score_text = font.render(f"Opponent: {self.opponent_score}", True, COLORS["WHITE"])
+        self.screen.blit(score_text, (10, 10))
 
 class TestBaseGame(unittest.TestCase):
     def test_spawn_new_piece(self):

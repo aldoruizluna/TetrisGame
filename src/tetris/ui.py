@@ -13,68 +13,46 @@ class Button:
     """Class representing a clickable button."""
     
     def __init__(self, x, y, width, height, text, color=COLORS["WHITE"], hover_color=COLORS["BLUE"]):
-        """Initialize a new button.
-        
-        Args:
-            x (int): X position
-            y (int): Y position
-            width (int): Button width
-            height (int): Button height
-            text (str): Button text
-            color (tuple, optional): Normal color. Defaults to WHITE.
-            hover_color (tuple, optional): Color when hovered. Defaults to BLUE.
-        """
+        """Initialize a new button."""
         self.rect = pygame.Rect(x, y, width, height)
         self.text = text
         self.color = color
         self.hover_color = hover_color
         self.is_hovered = False
         self.font = pygame.font.Font(None, 36)
+        # Cache text surfaces
+        self._normal_text = self.font.render(text, True, color)
+        self._hover_text = self.font.render(text, True, hover_color)
 
     def draw(self, screen):
-        """Draw the button on the screen.
-        
-        Args:
-            screen: Pygame screen surface
-        """
-        color = self.hover_color if self.is_hovered else self.color
-        text_surface = self.font.render(self.text, True, color)
+        """Draw the button on the screen."""
+        text_surface = self._hover_text if self.is_hovered else self._normal_text
         text_rect = text_surface.get_rect(center=self.rect.center)
         screen.blit(text_surface, text_rect)
 
     def handle_event(self, event):
-        """Handle mouse events for the button.
-        
-        Args:
-            event: Pygame event
-            
-        Returns:
-            bool: True if button was clicked, False otherwise
-        """
+        """Handle mouse events for the button."""
         if event.type == pygame.MOUSEMOTION:
             self.is_hovered = self.rect.collidepoint(event.pos)
-        elif event.type == pygame.MOUSEBUTTONDOWN:
-            if self.is_hovered:
-                return True
+        elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:  # Left click only
+            return self.is_hovered
         return False
 
 class Menu:
     """Class managing game menus."""
     
     def __init__(self, screen, settings, high_scores):
-        """Initialize the menu system.
-        
-        Args:
-            screen: Pygame screen surface
-            settings: Game settings instance
-            high_scores: High scores instance
-        """
+        """Initialize the menu system."""
         self.screen = screen
         self.settings = settings
         self.high_scores = high_scores
         self.state = GameState.MAIN_MENU
         self.previous_state = None
         self.selected_setting = None
+        # Cache fonts
+        self.title_font = pygame.font.Font(None, 74)
+        self.text_font = pygame.font.Font(None, 36)
+        self.cached_title = self.title_font.render("TETRIS", True, COLORS["WHITE"])
         self.create_buttons()
 
     def create_buttons(self):
@@ -121,10 +99,8 @@ class Menu:
         self.screen.fill(COLORS["BLACK"])
         
         # Draw title
-        font = pygame.font.Font(None, 74)
-        title = font.render("TETRIS", True, COLORS["WHITE"])
-        title_rect = title.get_rect(center=(self.screen.get_width() // 2, 80))
-        self.screen.blit(title, title_rect)
+        title_rect = self.cached_title.get_rect(center=(self.screen.get_width() // 2, 80))
+        self.screen.blit(self.cached_title, title_rect)
 
         # Draw buttons based on current state
         if self.state == GameState.MAIN_MENU:
@@ -174,75 +150,64 @@ class Menu:
         return None
 
     def handle_events(self, events):
-        """Handle menu events.
-        
-        Args:
-            events: List of pygame events
-            
-        Returns:
-            GameState or None: New game state if changed, None otherwise
-        """
-        print("\nMenu handling events, current state:", self.state)
+        """Handle menu events."""
         for event in events:
             if event.type == pygame.QUIT:
-                print("Menu: Quit event received")
                 return GameState.QUIT
 
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE and self.state != GameState.MAIN_MENU:
-                    print("Menu: Back event (ESC) received")
                     return self.handle_back()
-
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                print("Menu: Mouse click at", event.pos)
 
             if self.state == GameState.MAIN_MENU:
                 for i, button in enumerate(self.main_menu_buttons):
                     if button.handle_event(event):
-                        print(f"Menu: Main menu button {i} clicked ({button.text})")
                         if i == 0:  # Play Game
                             self.state = GameState.MODE_SELECTION
-                            print("Menu: Transitioning to MODE_SELECTION")
                         elif i == 1:  # High Scores
                             self.state = GameState.HIGH_SCORES
-                            print("Menu: Transitioning to HIGH_SCORES")
                         elif i == 2:  # Settings
                             self.state = GameState.SETTINGS
-                            print("Menu: Transitioning to SETTINGS")
                         elif i == 3:  # Quit
-                            print("Menu: Quit button clicked")
                             return GameState.QUIT
             
             elif self.state == GameState.MODE_SELECTION:
+                # First check back button
+                if self.back_button.handle_event(event):
+                    self.state = GameState.MAIN_MENU
+                    return None
+                
+                # Then check mode buttons
                 for i, button in enumerate(self.mode_buttons):
                     if button.handle_event(event):
-                        print(f"Menu: Mode selection button {i} clicked ({button.text})")
                         if i == 0:  # Classic Mode
-                            print("Menu: Classic Mode selected, returning CLASSIC_GAME state")
+                            self.state = GameState.CLASSIC_GAME
                             return GameState.CLASSIC_GAME
                         elif i == 1:  # Speed Mode
-                            print("Menu: Speed Mode selected")
+                            self.state = GameState.SPEED_GAME
                             return GameState.SPEED_GAME
                         elif i == 2:  # Battle Mode
-                            print("Menu: Battle Mode selected")
+                            self.state = GameState.BATTLE_GAME
                             return GameState.BATTLE_GAME
-                        elif i == 3:  # Back
-                            self.state = GameState.MAIN_MENU
-                            print("Menu: Returning to main menu")
-
+            
             elif self.state == GameState.SETTINGS:
+                # First check back button
+                if self.back_button.handle_event(event):
+                    self.state = GameState.MAIN_MENU
+                    return None
+                
+                # Then check settings buttons
                 for i, button in enumerate(self.settings_buttons):
                     if button.handle_event(event):
-                        print(f"Menu: Settings button {i} clicked ({button.text})")
-                        if i < len(self.settings_buttons) - 1:  # Not the back button
-                            self.selected_setting = i
-                        else:  # Back button
-                            self.state = GameState.MAIN_MENU
-                            print("Menu: Returning to main menu from settings")
-
+                        if i == 0:  # Music Volume
+                            self.selected_setting = "music"
+                        elif i == 1:  # SFX Volume
+                            self.selected_setting = "sfx"
+                        elif i == 2:  # Difficulty
+                            self.selected_setting = "difficulty"
+            
             elif self.state == GameState.HIGH_SCORES:
                 if self.back_button.handle_event(event):
-                    print("Menu: Back from high scores")
                     self.state = GameState.MAIN_MENU
 
         return None
