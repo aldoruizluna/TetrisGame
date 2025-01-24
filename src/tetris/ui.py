@@ -182,78 +182,67 @@ class Menu:
         Returns:
             GameState or None: New game state if changed, None otherwise
         """
+        print("\nMenu handling events, current state:", self.state)
         for event in events:
             if event.type == pygame.QUIT:
-                logger.info("Quit event received.")
+                print("Menu: Quit event received")
                 return GameState.QUIT
 
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE and self.state != GameState.MAIN_MENU:
-                    logger.info("Back event received.")
+                    print("Menu: Back event (ESC) received")
                     return self.handle_back()
+
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                print("Menu: Mouse click at", event.pos)
 
             if self.state == GameState.MAIN_MENU:
                 for i, button in enumerate(self.main_menu_buttons):
                     if button.handle_event(event):
-                        logger.info(f"Button {i} clicked.")
+                        print(f"Menu: Main menu button {i} clicked ({button.text})")
                         if i == 0:  # Play Game
-                            logger.info("Play Game button clicked.")
                             self.state = GameState.MODE_SELECTION
-                        elif i == 1:  # High Scores
-                            logger.info("High Scores button clicked.")
-                            self.state = GameState.HIGH_SCORES
-                        elif i == 2:  # Settings
-                            logger.info("Settings button clicked.")
+                            print("Menu: Transitioning to MODE_SELECTION")
+                        elif i == 1:  # Settings
                             self.state = GameState.SETTINGS
+                            print("Menu: Transitioning to SETTINGS")
+                        elif i == 2:  # High Scores
+                            self.state = GameState.HIGH_SCORES
+                            print("Menu: Transitioning to HIGH_SCORES")
                         elif i == 3:  # Quit
-                            logger.info("Quit button clicked.")
+                            print("Menu: Quit button clicked")
                             return GameState.QUIT
-
+            
             elif self.state == GameState.MODE_SELECTION:
                 for i, button in enumerate(self.mode_buttons):
                     if button.handle_event(event):
-                        logger.info(f"Mode button {i} clicked.")
+                        print(f"Menu: Mode selection button {i} clicked ({button.text})")
                         if i == 0:  # Classic Mode
-                            logger.info("Classic Mode button clicked.")
-                            self.state = GameState.CLASSIC_GAME
+                            print("Menu: Classic Mode selected, returning CLASSIC_GAME state")
+                            return GameState.CLASSIC_GAME
                         elif i == 1:  # Speed Mode
-                            logger.info("Speed Mode button clicked.")
-                            self.state = GameState.SPEED_GAME
+                            print("Menu: Speed Mode selected")
+                            return GameState.SPEED_GAME
                         elif i == 2:  # Battle Mode
-                            logger.info("Battle Mode button clicked.")
-                            self.state = GameState.BATTLE_GAME
+                            print("Menu: Battle Mode selected")
+                            return GameState.BATTLE_GAME
                         elif i == 3:  # Back
-                            logger.info("Back button clicked.")
                             self.state = GameState.MAIN_MENU
+                            print("Menu: Returning to main menu")
 
             elif self.state == GameState.SETTINGS:
                 for i, button in enumerate(self.settings_buttons):
                     if button.handle_event(event):
-                        logger.info(f"Settings button {i} clicked.")
-                        if i == 0:  # Music Volume
-                            logger.info("Music Volume button clicked.")
-                            self.settings.music_volume = (self.settings.music_volume + 0.1) % 1.1
-                            self.settings_buttons[0].text = f"Music: {int(self.settings.music_volume * 100)}%"
-                            self.settings.save_settings()
-                        elif i == 1:  # SFX Volume
-                            logger.info("SFX Volume button clicked.")
-                            self.settings.sfx_volume = (self.settings.sfx_volume + 0.1) % 1.1
-                            self.settings_buttons[1].text = f"SFX: {int(self.settings.sfx_volume * 100)}%"
-                            self.settings.save_settings()
-                        elif i == 2:  # Difficulty
-                            logger.info("Difficulty button clicked.")
-                            difficulties = ["Easy", "Normal", "Hard"]
-                            current_idx = difficulties.index(self.settings.difficulty)
-                            self.settings.difficulty = difficulties[(current_idx + 1) % len(difficulties)]
-                            self.settings_buttons[2].text = f"Difficulty: {self.settings.difficulty}"
-                            self.settings.save_settings()
-                        elif i == 3:  # Back
-                            logger.info("Back button clicked.")
+                        print(f"Menu: Settings button {i} clicked ({button.text})")
+                        if i < len(self.settings_buttons) - 1:  # Not the back button
+                            self.selected_setting = i
+                        else:  # Back button
                             self.state = GameState.MAIN_MENU
+                            print("Menu: Returning to main menu from settings")
 
             elif self.state == GameState.HIGH_SCORES:
                 if self.back_button.handle_event(event):
-                    logger.info("Back button clicked.")
+                    print("Menu: Back from high scores")
                     self.state = GameState.MAIN_MENU
 
         return None

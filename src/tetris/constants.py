@@ -41,6 +41,8 @@ class GameState(enum.Enum):
     HIGH_SCORES = 7  # High scores screen
     PAUSE = 8  # Game paused
     QUIT = 9  # Quit game
+    PLAYING = 10  # Active gameplay
+    GAME_OVER = 11  # Game over state
 
 # Tetrimino shapes and their colors
 SHAPES = [
