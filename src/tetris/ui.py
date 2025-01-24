@@ -203,12 +203,12 @@ class Menu:
                         if i == 0:  # Play Game
                             self.state = GameState.MODE_SELECTION
                             print("Menu: Transitioning to MODE_SELECTION")
-                        elif i == 1:  # Settings
-                            self.state = GameState.SETTINGS
-                            print("Menu: Transitioning to SETTINGS")
-                        elif i == 2:  # High Scores
+                        elif i == 1:  # High Scores
                             self.state = GameState.HIGH_SCORES
                             print("Menu: Transitioning to HIGH_SCORES")
+                        elif i == 2:  # Settings
+                            self.state = GameState.SETTINGS
+                            print("Menu: Transitioning to SETTINGS")
                         elif i == 3:  # Quit
                             print("Menu: Quit button clicked")
                             return GameState.QUIT
