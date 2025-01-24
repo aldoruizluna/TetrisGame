@@ -12,7 +12,7 @@ from tetris.constants import (
 )
 
 # Configure logging
-logging.basicConfig(level=logging.INFO,
+logging.basicConfig(level=logging.DEBUG,
                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                    stream=sys.stdout)
 logger = logging.getLogger(__name__)

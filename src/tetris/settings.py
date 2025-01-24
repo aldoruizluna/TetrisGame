@@ -1,12 +1,11 @@
-"""Module for managing game settings and high scores."""
+"""
+Module for managing game settings and high scores.
+"""
 
 import json
 from datetime import datetime
 from .constants import (
-    DEFAULT_MUSIC_VOLUME,
-    DEFAULT_SFX_VOLUME,
-    DEFAULT_DIFFICULTY,
-    DEFAULT_CONTROLS
+    DEFAULT_SETTINGS
 )
 
 class Settings:
@@ -14,10 +13,10 @@ class Settings:
     
     def __init__(self):
         """Initialize settings with default values."""
-        self.music_volume = DEFAULT_MUSIC_VOLUME
-        self.sfx_volume = DEFAULT_SFX_VOLUME
-        self.difficulty = DEFAULT_DIFFICULTY
-        self.controls = DEFAULT_CONTROLS.copy()
+        self.music_volume = DEFAULT_SETTINGS["MUSIC_VOLUME"]
+        self.sfx_volume = DEFAULT_SETTINGS["SFX_VOLUME"]
+        self.difficulty = DEFAULT_SETTINGS["DIFFICULTY"]
+        self.controls = DEFAULT_SETTINGS["CONTROLS"].copy()
         self.load_settings()
 
     def save_settings(self):

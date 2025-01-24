@@ -4,12 +4,13 @@ import pygame
 from tetris.game import BaseGame, SpeedGame, BattleGame
 from tetris.settings import Settings, HighScores
 from tetris.ui import Menu
-from tetris.constants import SCREEN_WIDTH, SCREEN_HEIGHT, GameState
+from tetris.constants import SCREEN_DIMENSIONS, GameState
+
 
 def main():
     """Main game function."""
     pygame.init()
-    screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+    screen = pygame.display.set_mode((SCREEN_DIMENSIONS['WIDTH'], SCREEN_DIMENSIONS['HEIGHT']))
     settings = Settings()
     high_scores = HighScores()
     menu = Menu(screen, settings, high_scores)
@@ -32,10 +33,13 @@ def main():
                     running = False
                 elif new_state == GameState.CLASSIC_GAME:
                     current_game = BaseGame(screen, settings, high_scores)
+                    print("Transitioning to Classic Game mode.")
                 elif new_state == GameState.SPEED_GAME:
                     current_game = SpeedGame(screen, settings, high_scores)
+                    print("Transitioning to Speed Game mode.")
                 elif new_state == GameState.BATTLE_GAME:
                     current_game = BattleGame(screen, settings, high_scores)
+                    print("Transitioning to Battle Game mode.")
             menu.draw()
         else:
             current_game.handle_input(events)
