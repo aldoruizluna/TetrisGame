@@ -30,14 +30,6 @@ class Tetrimino:
 
     def rotate(self):
         """Rotate the piece clockwise."""
-        # Create a new rotated shape
-        rows = len(self.shape)
-        cols = len(self.shape[0])
-        rotated = [[0 for _ in range(rows)] for _ in range(cols)]
-        
-        for r in range(rows):
-            for c in range(cols):
-                rotated[c][rows - 1 - r] = self.shape[r][c]
-        
-        self.shape = rotated
+        self.shape = list(zip(*self.shape[::-1]))
+        self.shape = [list(row) for row in self.shape]
         print("Rotated Tetrimino")

@@ -15,7 +15,7 @@ from .constants import (  # Import constants used in the game
     COLORS,
     SHAPES, GameState
 )
-from .game_objects import Tetrimino  # Import the Tetrimino class for game pieces
+from .tetrimino import Tetrimino  # Import the Tetrimino class for game pieces
 
 # Initialize logger
 logger = logging.getLogger(__name__)
