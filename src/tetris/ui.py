@@ -136,6 +136,37 @@ class Menu:
             self.screen.blit(text, text_rect)
             y += 40
 
+    def draw_game_over(self, current_game, last_game_snapshot):
+        """Draw the GAME OVER screen over the last snapshot of the game."""
+        # Draw the last game snapshot
+        self.screen.blit(last_game_snapshot, (0, 0))
+        
+        # Create a semi-transparent overlay
+        overlay = pygame.Surface(self.screen.get_size())
+        overlay.fill((0, 0, 0))  # Fill with black
+        overlay.set_alpha(128)  # Set transparency level (0-255)
+        self.screen.blit(overlay, (0, 0))  # Draw the overlay
+        
+        # Draw GAME OVER text
+        game_over_text = "GAME OVER"
+        font = pygame.font.Font(None, 74)
+        text_surface = font.render(game_over_text, True, COLORS["WHITE"])
+        text_rect = text_surface.get_rect(center=(self.screen.get_width() // 2, self.screen.get_height() // 3))
+        self.screen.blit(text_surface, text_rect)
+        
+        # Draw restart and quit buttons
+        center_x = self.screen.get_width() // 2 - 100
+        start_y = self.screen.get_height() // 2
+        spacing = 70
+        button_width = 200
+        button_height = 50
+        self.restart_button = Button(center_x, start_y + spacing, button_width, button_height, "Restart")
+        self.quit_button = Button(center_x, start_y + spacing * 2, button_width, button_height, "Quit")
+        self.restart_button.draw(self.screen)
+        self.quit_button.draw(self.screen)
+        
+        pygame.display.flip()
+
     def handle_back(self):
         """Handle back button navigation."""
         if self.state == GameState.MODE_SELECTION:
@@ -155,6 +186,11 @@ class Menu:
             if event.type == pygame.QUIT:
                 return GameState.QUIT
 
+            if self.state == GameState.GAME_OVER:
+                # Ignore arrow key events
+                if event.type == pygame.KEYDOWN and event.key in [pygame.K_UP, pygame.K_DOWN, pygame.K_LEFT, pygame.K_RIGHT]:
+                    continue
+
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE and self.state != GameState.MAIN_MENU:
                     return self.handle_back()
@@ -170,13 +206,14 @@ class Menu:
                             self.state = GameState.SETTINGS
                         elif i == 3:  # Quit
                             return GameState.QUIT
-            
+        
             elif self.state == GameState.MODE_SELECTION:
                 # First check back button
                 if self.back_button.handle_event(event):
+                    print("Back button clicked in mode selection.")  # Debugging output
                     self.state = GameState.MAIN_MENU
                     return None
-                
+            
                 # Then check mode buttons
                 for i, button in enumerate(self.mode_buttons):
                     if button.handle_event(event):
@@ -189,13 +226,14 @@ class Menu:
                         elif i == 2:  # Battle Mode
                             self.state = GameState.BATTLE_GAME
                             return GameState.BATTLE_GAME
-            
+        
             elif self.state == GameState.SETTINGS:
                 # First check back button
                 if self.back_button.handle_event(event):
+                    print("Back button clicked in settings.")  # Debugging output
                     self.state = GameState.MAIN_MENU
                     return None
-                
+            
                 # Then check settings buttons
                 for i, button in enumerate(self.settings_buttons):
                     if button.handle_event(event):
@@ -205,9 +243,23 @@ class Menu:
                             self.selected_setting = "sfx"
                         elif i == 2:  # Difficulty
                             self.selected_setting = "difficulty"
-            
+                        elif i == 3:  # Back
+                            self.state = GameState.MAIN_MENU
+                            return None
+        
             elif self.state == GameState.HIGH_SCORES:
                 if self.back_button.handle_event(event):
                     self.state = GameState.MAIN_MENU
+
+            elif self.state == GameState.GAME_OVER:
+                # Check restart and quit buttons
+                if self.restart_button.handle_event(event):
+                    print("Restart button clicked.")  # Debugging output
+                    self.state = GameState.CLASSIC_GAME  # Or whatever mode you want to restart
+                    return None
+                elif self.quit_button.handle_event(event):
+                    print("Quit button clicked.")  # Debugging output
+                    self.state = GameState.MAIN_MENU
+                    return None
 
         return None

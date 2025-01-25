@@ -11,7 +11,6 @@ def main():
     """Main game function."""
     print("Initializing game...")
     pygame.init()
-    # Initialize display with proper flags
     screen = pygame.display.set_mode((SCREEN_DIMENSIONS['WIDTH'], SCREEN_DIMENSIONS['HEIGHT']), 
                                    pygame.SHOWN | pygame.HWSURFACE | pygame.DOUBLEBUF)
     pygame.display.set_caption("Tetris")
@@ -56,19 +55,25 @@ def main():
             menu.draw()
             pygame.display.flip()
         else:
-            current_game.handle_input(events)
-            if current_game.current_state == GameState.PAUSE:
-                print("Game paused, returning to menu")
+            game_state = current_game.handle_input(events)
+            
+            if game_state == GameState.QUIT:
+                running = False
+            elif game_state == GameState.PAUSE:
                 current_game = None
                 pygame.event.set_grab(False)
             else:
                 current_game.update()
                 current_game.draw()
-                pygame.display.flip()
-                if current_game.game_over:
-                    print("Game over, returning to menu")
-                    current_game = None
+                
+                if current_game.current_state == GameState.GAME_OVER:
+                    print("Game Over reached!")
+                    # Keep the game instance to show the game over screen
                     pygame.event.set_grab(False)
+                
+                # Only flip the display if the game is initialized
+                if pygame.get_init():
+                    pygame.display.flip()
 
     print("Game shutting down...")
     pygame.quit()
