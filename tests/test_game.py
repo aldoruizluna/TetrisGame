@@ -125,6 +125,32 @@ class TestBaseGame(unittest.TestCase):
         # Verify game over
         self.assertTrue(self.game.game_over)
 
+    def test_draw_methods(self):
+        """Test the drawing methods of BaseGame."""
+        self.game.clear_screen()  # Test clear screen
+        self.assertEqual(self.screen.get_at((0, 0)), COLORS["BLACK"])
+        
+        self.game.draw_grid()  # Test draw grid
+        # Check if grid border is drawn (this is a bit tricky, but we can check a pixel)
+        border_pixel = self.screen.get_at((SCREEN_DIMENSIONS['GRID_OFFSET_X'], SCREEN_DIMENSIONS['GRID_OFFSET_Y']))
+        self.assertEqual(border_pixel, COLORS["WHITE"])
+        
+        self.game.draw_filled_blocks()  # Test filled blocks (should be none initially)
+        # Check if any pixel is drawn (should still be black)
+        self.assertEqual(self.screen.get_at((0, 0)), COLORS["BLACK"])
+        
+        self.game.current_piece = self.game.spawn_new_piece()  # Spawn a piece
+        self.game.draw_current_piece()  # Test draw current piece
+        # Check if piece is drawn (you might want to check specific coordinates based on piece shape)
+        piece_pixel = self.screen.get_at((SCREEN_DIMENSIONS['GRID_OFFSET_X'] + self.game.current_piece.x * SCREEN_DIMENSIONS['BLOCK_SIZE'],
+                                             SCREEN_DIMENSIONS['GRID_OFFSET_Y'] + self.game.current_piece.y * SCREEN_DIMENSIONS['BLOCK_SIZE']))
+        self.assertEqual(piece_pixel, self.game.current_piece.color)
+        
+        self.game.draw_score()  # Test draw score
+        # Check if score is drawn (you might want to check specific coordinates based on score position)
+        score_pixel = self.screen.get_at((10, 10))  # Assuming score is drawn at (10, 10)
+        self.assertEqual(score_pixel, COLORS["WHITE"])
+
 class TestSpeedGame(unittest.TestCase):
     """Test cases for the SpeedGame class."""
 

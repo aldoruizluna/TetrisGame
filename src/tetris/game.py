@@ -231,10 +231,26 @@ class BaseGame:
 
     def draw(self):
         """Draw the game state."""
-        # Clear the screen with black color
-        self.screen.fill(COLORS["BLACK"])
+        self.clear_screen()
+        self.draw_grid()
+        self.draw_filled_blocks()
         
-        # Always draw the grid border
+        if self.current_state == GameState.PLAYING:
+            self.draw_current_piece()
+            self.draw_score()
+        elif self.current_state == GameState.GAME_OVER:
+            self.render_game_over()
+        
+        if pygame.get_init():
+            pygame.display.flip()
+
+    def clear_screen(self):
+        """Clear the screen with black color."""
+        self.screen.fill(COLORS["BLACK"])
+
+    def draw_grid(self):
+        """Draw the grid border and lines."""
+        # Draw grid border
         border_rect = pygame.Rect(
             SCREEN_DIMENSIONS['GRID_OFFSET_X'] - 2,
             SCREEN_DIMENSIONS['GRID_OFFSET_Y'] - 2,
@@ -260,8 +276,9 @@ class BaseGame:
                 (SCREEN_DIMENSIONS['GRID_OFFSET_X'] + SCREEN_DIMENSIONS['GRID_WIDTH'] * SCREEN_DIMENSIONS['BLOCK_SIZE'],
                  SCREEN_DIMENSIONS['GRID_OFFSET_Y'] + y * SCREEN_DIMENSIONS['BLOCK_SIZE'])
             )
-        
-        # Draw filled blocks (common for both PLAYING and GAME_OVER states)
+
+    def draw_filled_blocks(self):
+        """Draw filled blocks on the grid."""
         for y in range(SCREEN_DIMENSIONS['GRID_HEIGHT']):
             for x in range(SCREEN_DIMENSIONS['GRID_WIDTH']):
                 if self.grid[y][x]:
@@ -273,60 +290,27 @@ class BaseGame:
                          SCREEN_DIMENSIONS['BLOCK_SIZE'] - 1,
                          SCREEN_DIMENSIONS['BLOCK_SIZE'] - 1)
                     )
-        
-        if self.current_state == GameState.PLAYING:
-            # Draw the current piece
-            if self.current_piece:
-                for y, row in enumerate(self.current_piece.shape):
-                    for x, cell in enumerate(row):
-                        if cell:
-                            pygame.draw.rect(
-                                self.screen,
-                                self.current_piece.color,
-                                (SCREEN_DIMENSIONS['GRID_OFFSET_X'] + (self.current_piece.x + x) * SCREEN_DIMENSIONS['BLOCK_SIZE'],
-                                 SCREEN_DIMENSIONS['GRID_OFFSET_Y'] + (self.current_piece.y + y) * SCREEN_DIMENSIONS['BLOCK_SIZE'],
-                                 SCREEN_DIMENSIONS['BLOCK_SIZE'] - 1,
-                                 SCREEN_DIMENSIONS['BLOCK_SIZE'] - 1)
-                            )
-            
-            # Draw score
-            font = pygame.font.Font(None, 36)
-            score_text = font.render(f"Score: {self.score}", True, COLORS["WHITE"])
-            self.screen.blit(score_text, (10, 10))
-        
-        elif self.current_state == GameState.GAME_OVER:
-            # Create a semi-transparent overlay
-            overlay = pygame.Surface((SCREEN_DIMENSIONS['WIDTH'], SCREEN_DIMENSIONS['HEIGHT']))
-            overlay.fill(COLORS["BLACK"])
-            overlay.set_alpha(128)  # 50% transparency
-            self.screen.blit(overlay, (0, 0))
-            
-            # Draw game over text and options
-            font = pygame.font.Font(None, 48)
-            game_over_text = font.render("GAME OVER", True, COLORS["RED"])
-            score_text = font.render(f"Final Score: {self.score}", True, COLORS["WHITE"])
-            
-            # Create option texts with key hints
-            restart_text = font.render("Press ENTER to Play Again", True, COLORS["GREEN"])
-            menu_text = font.render("Press ESC for Main Menu", True, COLORS["YELLOW"])
-            quit_text = font.render("Press Q to Quit", True, COLORS["RED"])
-            
-            # Position all text elements
-            game_over_rect = game_over_text.get_rect(center=(SCREEN_DIMENSIONS['WIDTH']//2, SCREEN_DIMENSIONS['HEIGHT']//2 - 100))
-            score_rect = score_text.get_rect(center=(SCREEN_DIMENSIONS['WIDTH']//2, SCREEN_DIMENSIONS['HEIGHT']//2 - 20))
-            restart_rect = restart_text.get_rect(center=(SCREEN_DIMENSIONS['WIDTH']//2, SCREEN_DIMENSIONS['HEIGHT']//2 + 40))
-            menu_rect = menu_text.get_rect(center=(SCREEN_DIMENSIONS['WIDTH']//2, SCREEN_DIMENSIONS['HEIGHT']//2 + 90))
-            quit_rect = quit_text.get_rect(center=(SCREEN_DIMENSIONS['WIDTH']//2, SCREEN_DIMENSIONS['HEIGHT']//2 + 140))
-            
-            # Draw all text elements
-            self.screen.blit(game_over_text, game_over_rect)
-            self.screen.blit(score_text, score_rect)
-            self.screen.blit(restart_text, restart_rect)
-            self.screen.blit(menu_text, menu_rect)
-            self.screen.blit(quit_text, quit_rect)
-    
-        if pygame.get_init():
-            pygame.display.flip()
+
+    def draw_current_piece(self):
+        """Draw the current piece on the grid."""
+        if self.current_piece:
+            for y, row in enumerate(self.current_piece.shape):
+                for x, cell in enumerate(row):
+                    if cell:
+                        pygame.draw.rect(
+                            self.screen,
+                            self.current_piece.color,
+                            (SCREEN_DIMENSIONS['GRID_OFFSET_X'] + (self.current_piece.x + x) * SCREEN_DIMENSIONS['BLOCK_SIZE'],
+                             SCREEN_DIMENSIONS['GRID_OFFSET_Y'] + (self.current_piece.y + y) * SCREEN_DIMENSIONS['BLOCK_SIZE'],
+                             SCREEN_DIMENSIONS['BLOCK_SIZE'] - 1,
+                             SCREEN_DIMENSIONS['BLOCK_SIZE'] - 1)
+                        )
+
+    def draw_score(self):
+        """Draw the current score on the screen."""
+        font = pygame.font.Font(None, 36)
+        score_text = font.render(f"Score: {self.score}", True, COLORS["WHITE"])
+        self.screen.blit(score_text, (10, 10))
 
     def render_game_over(self):
         """Render the game over screen."""
